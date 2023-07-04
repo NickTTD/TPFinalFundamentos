@@ -27,7 +27,7 @@
       writeln('2- Listado');
       writeln('3- Consulta');
       writeln('4- Alta/Baja logica');
-      writeln('5- Listado Completo');
+      writeln('5- Listado por Nombres');
       writeln('6- Atenciónes entre 2 fechas');
       writeln('7- Porcentaje de atenciones ');
       writeln('0- Salir');

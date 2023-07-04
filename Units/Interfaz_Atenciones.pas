@@ -21,63 +21,69 @@ implementation
 
 
 
-
-procedure AnadirConsulta(var arch2:t_archivo2;var r:reg_pacientes);
+procedure AnadirConsulta(var arch2: t_archivo2; var r: reg_pacientes);
 var
-j,pos:longint;
-r2,raux:reg_aten;
-fecha:string[10];
+  j, pos: longint;
+  r2, raux: reg_aten;
+  fecha: string[10]; 
+  auto: string[1]; //No puse char porque si por algún motivo el usuario ingresa (por ejemplo) aE rompe todo.
 begin
   clrscr;
-    with r2 do
+  with r2 do
+  begin
+    j := FileSize(arch2);
+    dni := r.dni;
+    
+    if j > 1 then
+    begin
+      Seek(arch2, j - 1);
+      read(arch2, raux);
+    end;
+    
+    writeln('Añadiendo una consulta para: ', r.nombre, ' DNI: ', r.dni);
+    writeln('Desea ingresar automáticamente la fecha? Ingrese A para confirmar.');
+    readln(auto);
+    
+    if (UpCase(auto[1]) = 'A') then
+       fecha_atencion := FechaAuto()
+     else
       begin
-        j:=FileSize(arch2);
-        dni := r.dni;
-        if j > 1 then
-          begin
-              Seek(arch2,j - 1);
-              read(arch2,raux);
-          end;
-        writeln('Añadiendo una consulta para: ',r.nombre,' DNI: ',r.dni);
-        writeln('Ingrese la fecha (DD/MM/AAAA), "A" para automático');
-        readln(fecha);
-        if (UpCase(fecha[1]) = 'A') then fecha_atencion:=FechaAuto()
-          else fecha_atencion:=fecha;
-        if ValidarFecha(r2) then
-        begin
-        if (raux.dni = r.dni) and (fecha_atencion = raux.fecha_atencion) then
-          begin
-            writeln('Agregando un tratamiento a una consulta existente');
-            pos:= finaltrata(raux.tratamiento);
-            writeln('Ingrese el código de atención: ');
-            readln(tratamiento[pos].codigo);
-            writeln('Ingrese detalle/tratamiento de la atención: ');
-            readln(tratamiento[pos].detalle);
-            Seek(arch2,j - 1);
-            write(arch2,raux);
-          end
-        else
-        begin
-        fecha_numerica:=fechanumero(r2);
+       writeln('Ingrese la fecha de atención (DD/MM/AAAA)');
+       readln(fecha_atencion)
+      end;
+    if ValidarFecha(r2.fecha_atencion) then
+    begin
+      if (raux.dni = r.dni) and (fecha_atencion = raux.fecha_atencion) then
+      begin
+        writeln('Agregando un tratamiento a una consulta existente');
+        pos := finaltrata(raux.tratamiento);
+        writeln('Ingrese el código de atención: ');
+        readln(tratamiento[pos].codigo);
+        writeln('Ingrese detalle/tratamiento de la atención: ');
+        readln(tratamiento[pos].detalle);
+        Seek(arch2, j - 1);
+        write(arch2, raux);
+      end
+      else
+      begin
+        fecha_numerica := fechanumero(r2);
         writeln('Ingrese el código de atención: ');
         readln(tratamiento[1].codigo);
         writeln('Ingrese detalle/tratamiento de la atención: ');
         readln(tratamiento[1].detalle);
-        seek(arch2,j);
-        write(arch2,r2);
+        seek(arch2, j);
+        write(arch2, r2);
         burbujaDF(arch2);
-        end;
-       end
-        else
-        begin
-        writeln('Fecha incorrecta');
-        readkey;
-        AnadirConsulta(arch2,r)
-        end;
-        end;
- end;
+      end;
+    end
+    else
+      AnadirConsulta(arch2, r); // Este llamado recursivo se usa en caso de que el usuario ingrese una fecha incorrecta 
+  end;
+end;
+
 procedure mostrar_registro2(r: reg_aten; r2:reg_pacientes;i,j:longint);
 begin
+
   with r do
   begin
     gotoxy(5,1);
@@ -159,14 +165,14 @@ end;
 procedure bajarSelector2(var y:integer);
         begin
            inc(y);
-                if y>=6 then y:=2; //Mueve el selector al inicio (Nombre) si se intenta bajar estando en el último (Email)
-                if y=3 then y:=4
+                if y>=7 then y:=2; //Mueve el selector al inicio (Nombre) si se intenta bajar estando en el último (Email)
+                if y=3 then y:=5
                 end;
 procedure subirSelector2 (var y:integer);
         begin
         dec(y);
         if y<2 then y:=5; //mueve el selector al final (Email) si se intenta subir estando en el primero (Nombre)
-        if y=3 then y:=2
+        if y=4 then y:=2
         end;
 
 

@@ -3,7 +3,7 @@ unit manejo_archivo_final;
 {$codepage UTF8}
 interface
 
-uses ArchivoPacientes, ArchivoAtenciones, crt, Interfaz_Pacientes,Interfaz_Atenciones,Interfaz_Nombre;
+uses ArchivoPacientes, ArchivoAtenciones, crt, Interfaz_Pacientes,Interfaz_Atenciones,Interfaz_Nombre,FechaStuff;
 procedure EditarPaciente(var arch:t_archivo;var i:LongInt;var y:integer;var r:reg_pacientes);
 procedure burbujaNA(var v:t_archivo);
 procedure guardar_registro(var arch: t_archivo; pos: LongInt; r: reg_pacientes);
@@ -17,24 +17,32 @@ procedure eliminarAtencion(var v:t_archivo2;var I:LongInt; var v2:t_archivo);
 implementation
 
 procedure EditarAtencion(var arch:t_archivo2;var i:LongInt;var y:integer;var r:reg_aten);
+var
+FechaOK:Boolean;
 begin
 with r do
   case y of
   2:
   begin
-   gotoxy(25,2);
-    clreol;
-    readln(fecha_atencion);
-  end;
-  4:
-  begin
-    gotoxy(12,4);
-    clreol;
-    readln(tratamiento[1].codigo);
+    FechaOK:=False;
+    while not FechaOK do
+      begin
+        gotoxy(25,2);
+        clreol;
+        readln(fecha_atencion);
+        if ValidarFecha(fecha_atencion) then
+          FechaOK := True
+      end;
   end;
   5:
   begin
-    gotoxy(13,5);
+    gotoxy(12,5);
+    clreol;
+    readln(tratamiento[1].codigo);
+  end;
+  6:
+  begin
+    gotoxy(13,6);
     clreol;
     readln(tratamiento[1].detalle);
   end;
@@ -44,6 +52,8 @@ with r do
 end;
 
 procedure EditarPaciente(var arch:t_archivo;var i:LongInt;var y:integer;var r:reg_pacientes);
+var
+FechaOK:Boolean;
 begin
 with r do
   case y of
@@ -75,9 +85,16 @@ with r do
   end;
   6:
   begin
-    gotoxy(25,6);
-    clreol;
-    readln(fecha_nacimiento);
+    FechaOK:=False;
+    while not FechaOK do
+    begin
+      gotoxy(25,6);
+      clreol;
+      readln(fecha_nacimiento);
+
+      if ValidarFecha(fecha_nacimiento) then
+        FechaOK := True
+      end;
   end;
   7:begin
     gotoxy(17,7);
@@ -188,20 +205,21 @@ end;
 {Adaptado del procedimiento de arriba pero para buscar por nombre de la lista de nombres}
 procedure BuscarPacientevec(var arch:t_archivo;var r:reg_pacientes);
 var
-i:longint;
+pos:longint;
 arch2:t_archivo2;
 x:string;
 begin
   clreol;
   x:=r.nombre;
+  pos:=-1;
 with r do
   begin
-    bBinaria(arch,x,i);
-    if i > -1 then listadoCompleto(arch,arch2,i)
+    bBinaria(arch,x,pos);
+    if pos > -1 then listadoCompleto(arch,arch2,pos)
     else
       begin
         writeln('No encontrado');
-        i:=0;
+        pos:=-1;
         readkey;
     end;
   end;
@@ -263,24 +281,35 @@ end;
 
 
 procedure cargar_registro(var r: reg_pacientes);
+var
+  FechaOK:Boolean;
 begin
   with r do
   begin
-  Write('Nombre: ');
-  readln(nombre);
-  Write('Apellido: ');
-  readln(apellido);
-  Write('Ciudad: ');
-  readln(ciudad);
-  Write('Fecha De Nacimiento: ');
-  readln(fecha_nacimiento);
-  Write('Obra Social: ');
-  readln(obra_social);
-  Write('Numero de Afiliado: ');
-  readln(numero_afiliado);
-  Write('E-Mail: ');
-  readln(email);
-  r.estado := True;
+    FechaOK := False;
+
+    while not FechaOK do
+    begin
+      Write('Fecha De Nacimiento: ');
+      readln(fecha_nacimiento);
+
+      if ValidarFecha(fecha_nacimiento) then
+        FechaOK := True
+      end;
+
+    Write('Nombre: ');
+    readln(nombre);
+    Write('Apellido: ');
+    readln(apellido);
+    Write('Ciudad: ');
+    readln(ciudad);
+    Write('Obra Social: ');
+    readln(obra_social);
+    Write('Numero de Afiliado: ');
+    readln(numero_afiliado);
+    Write('E-Mail: ');
+    readln(email);
+    estado := True;
   end;
 end;
 
@@ -342,6 +371,7 @@ var
 begin
   if (FileSize(arch2) > 0) then
   begin
+    burbujaDF(arch2);
     y:=2;
     clrscr;
     min := 0;
@@ -558,7 +588,7 @@ while i < filesize(v)-1 do
   listadoCompleto(arch,v,j);
 end;
 
-//Confirma si el usuario quiere borrar el usuario, llama al procedimiento que lo borra y te devuelve al perfil del usuario
+//Confirma si el usuario quiere borrar la atención, llama al procedimiento que lo borra y te devuelve al perfil del usuario
 procedure eliminarAtencion(var v:t_archivo2;var I:LongInt ;var v2:t_archivo);
 var tecla:char;
 begin
